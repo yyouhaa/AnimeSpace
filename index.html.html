@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AnimeSpace</title>
+  <link rel="stylesheet" href="estilos.css">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+
+  <header>
+    <div class="logo">
+      <a id="logo" href="#inicio">
+        <img src="icono.png" alt="logo">    
+      </a> <!-- redirige al inicio -->
+
+    </div>
+    <nav>
+      <ul class="menu-header">
+        <li><a href="#lista-animes">Listas</a></li>
+        <li><a href="#notas">Notas</a></li> 
+      </ul>
+    </nav>
+    </header>
+
+  <main>
+    <!-- banner -->
+    <section id="banner">
+      <div class="banner-contenido">
+        <h1 id="banner-titulo">Bienvenido a AnimeSpace</h1>
+        <p id="banner-frase">Organiza tus animes y notas en un solo lugar</p>
+      </div>
+    </section>
+
+    <!-- inicio -->
+    <section id="inicio" class="seccion">
+      <div class="cuadro" id="cuadro-lista">
+        <a href="#lista-animes">Listas</a>
+      </div>
+      <div class="cuadro" id="cuadro-notas">
+        <a href="#notas">Notas</a>
+      </div>
+    </section>
+    
+    <!-- ntas -->
+    <section id="notas" class="seccion oculto">
+      <h2>Notas</h2>
+      <div id="boton-nota">
+        <img src="boton+notas.png" alt="Crear nota">
+      </div>
+      <div id="notas-container">
+
+      </div>
+    </section>
+
+
+
+    <section id="lista-animes" class="seccion oculto">
+      <h2>Listas de Anime</h2>
+      
+      <!-- boton para agregar los animes -->
+      <button id="agregar-anime-btn">Agregar Anime</button>
+      
+      <!-- Contenedor del formulario de agregar anime (inicialmente oculto) -->
+      <div id="formulario-anime" style="display:none;">
+        <input type="text" id="nombre-anime" placeholder="Nombre del anime" required>
+        <select id="estado-anime">
+          <option value="viendo">Viendo</option>
+          <option value="completos">Completado</option>
+          <option value="porver">Pendiente</option>
+          <option value="olvidados">Abandonado</option>
+        </select>
+        <button id="guardar-anime">Guardar</button>
+      </div>
+    
+      <!-- Contenedor de listas de anime -->
+      <div class="list-container">
+        <div class="list-section" id="viendo">
+          <h3>Viendo</h3>
+          <ul id="viendo-lista"></ul>
+        </div>
+        <div class="list-section" id="completos">
+          <h3>Completados</h3>
+          <ul id="completos-lista"></ul>
+        </div>
+        <div class="list-section" id="porver">
+          <h3>Pendientes</h3>
+          <ul id="porver-lista"></ul>
+        </div>
+        <div class="list-section" id="olvidados">
+          <h3>Abandonados</h3>
+          <ul id="olvidados-lista"></ul>
+        </div>
+      </div>
+    </section>
+    
+
+
+  </main>
+
+  <footer id="footer">
+    <button id="infoButton" onclick="showInfo()">Info</button>
+  </footer>
+
+  <div id="infoModal" class="info-modal">
+    <div class="info-content">
+      <span class="close" onclick="closeInfo()">&times;</span>
+      <h2>Datos del alumno</h2>
+      <div class="info-details">
+        <img src="gato crisis.jfif" alt="Foto de Integrante" class="info-photo">
+        <div class="info-text">
+          <p><strong>Carrera:</strong> Diseño Multimedial</p>
+          <p><strong>Materia:</strong> Diseño y Programación web 1</p>
+          <p><strong>Turno:</strong> Noche</p>
+          <p><strong>Comisión:</strong> DMT3AV</p>
+          <p><strong>Año:</strong> 2024</p>
+          <p><strong>Nombre:</strong> Berasain Aldana</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+                                              //navegacion entre secciones
+    document.querySelectorAll('a[href^="#"]').forEach(enlace => {
+      enlace.addEventListener('click', evento => {
+        evento.preventDefault();
+        document.querySelectorAll('.seccion').forEach(sec => sec.classList.add('oculto'));
+        document.querySelector(enlace.getAttribute('href')).classList.remove('oculto');
+      });
+    });
+
+                                            //modal footer
+    //mostrar el modal
+    function showInfo() {
+      document.getElementById("infoModal").style.display = "flex";
+    }
+
+    //cerrar el modal
+    function closeInfo() {
+      document.getElementById("infoModal").style.display = "none";
+    }
+
+    // variables para los animes
+    let animes = JSON.parse(localStorage.getItem("animes")) || {
+      viendo: [],
+      completos: [],
+      porver: [],
+      olvidados: []
+    };
+
+    // gestion de laslistas de animes
+    const agregarAnimeBtn = document.getElementById("agregar-anime-btn");
+    const formularioAnime = document.getElementById("formulario-anime");
+    const guardarAnimeBtn = document.getElementById("guardar-anime");
+    const nombreAnimeInput = document.getElementById("nombre-anime");
+    const estadoAnimeSelect = document.getElementById("estado-anime");
+
+    let isEditing = false;
+
+    //mostrar u ocultar el formulario para agregar un anime
+    agregarAnimeBtn.addEventListener("click", () => {
+      formularioAnime.style.display = formularioAnime.style.display === "none" ? "block" : "none";
+      isEditing = false;
+      guardarAnimeBtn.textContent = "Guardar";
+      nombreAnimeInput.value = "";
+    });
+
+    //guardar o actualizar el anime
+    guardarAnimeBtn.addEventListener("click", () => {
+      const nombre = nombreAnimeInput.value.trim();
+      const estado = estadoAnimeSelect.value;
+
+      if (nombre === "") {
+        alert("Por favor, ingresa el nombre del anime.");
+        return;
+      }
+
+      if (isEditing) {
+        actualizarAnime(nombre, estado);
+      } else {
+        animes[estado].push({ nombre });
+        localStorage.setItem("animes", JSON.stringify(animes));
+        actualizarListas();
+      }
+
+      nombreAnimeInput.value = "";
+      formularioAnime.style.display = "none";
+      guardarAnimeBtn.textContent = "Guardar";
+      isEditing = false;
+    });
+
+    //actualizar las listas de animes
+    function actualizarListas() {
+      document.getElementById("viendo-lista").innerHTML = "";
+      document.getElementById("completos-lista").innerHTML = "";
+      document.getElementById("porver-lista").innerHTML = "";
+      document.getElementById("olvidados-lista").innerHTML = "";
+
+      for (const estado in animes) {
+        const lista = animes[estado];
+        const listaUl = document.getElementById(`${estado}-lista`);
+
+        lista.forEach((anime, index) => {
+          const li = document.createElement("li");
+          li.innerHTML = `
+            <span>${anime.nombre}</span>
+            <div>
+              <button class="editar" onclick="editarAnime('${estado}', ${index})">Editar</button>
+              <button class="eliminar" onclick="eliminarAnime('${estado}', ${index})">Eliminar</button>
+            </div>
+          `;
+          listaUl.appendChild(li);
+        });
+      }
+    }
+
+    //editar anime
+    function editarAnime(estado, index) {
+      const anime = animes[estado][index];
+      nombreAnimeInput.value = anime.nombre;
+      estadoAnimeSelect.value = estado;
+      formularioAnime.style.display = "block";
+      guardarAnimeBtn.textContent = "Guardar Cambios";
+      isEditing = true;
+
+      guardarAnimeBtn.onclick = () => {
+        const nuevoNombre = nombreAnimeInput.value.trim();
+        const nuevoEstado = estadoAnimeSelect.value;
+
+        if (nuevoNombre === "") {
+          alert("Por favor, ingresa el nombre del anime.");
+          return;
+        }
+
+        actualizarAnime(nuevoNombre, nuevoEstado, estado, index);
+      };
+    }
+
+    //actualizar-editar anime
+    function actualizarAnime(nuevoNombre, nuevoEstado, estado, index) {
+      animes[estado].splice(index, 1);
+      animes[nuevoEstado].push({ nombre: nuevoNombre });
+
+      localStorage.setItem("animes", JSON.stringify(animes));
+      actualizarListas();
+      formularioAnime.style.display = "none";
+    }
+
+    //eliminar anime
+    function eliminarAnime(estado, index) {
+      animes[estado].splice(index, 1);
+      localStorage.setItem("animes", JSON.stringify(animes));
+      actualizarListas();
+    }
+
+    //cargar las listas desde localStorage
+    document.addEventListener("DOMContentLoaded", actualizarListas);
+
+    //notas
+    function crearNota(texto = "") {
+      const nota = document.createElement("div");
+      nota.classList.add("nota");
+      nota.innerHTML = `
+        <textarea placeholder="Escribe tu nota aquí...">${texto}</textarea>
+        <button class="guardar">Guardar</button>
+        <div class="menu">
+          <div class="dots"></div>
+          <div class="dots"></div>
+          <div class="dots"></div>
+        </div>
+        <div class="menu-options">
+          <button class="editar">Editar</button>
+          <button class="eliminar">Eliminar</button>
+        </div>
+      `;
+      const guardarBtn = nota.querySelector(".guardar");
+      const textarea = nota.querySelector("textarea");
+      const menu = nota.querySelector(".menu");
+      const menuOptions = nota.querySelector(".menu-options");
+      const eliminar = nota.querySelector(".eliminar");
+      const editar = nota.querySelector(".editar");
+
+      guardarBtn.addEventListener("click", function () {
+        if (textarea.value.trim() !== "") {
+          textarea.setAttribute("readonly", true);
+          textarea.style.background = "#f1e6ff"; 
+          guardarBtn.style.display = "none";
+          guardarNotas();
+        } else {
+          alert("No puedes guardar una nota vacía.");
+        }
+      });
+
+      menu.addEventListener("click", function () {
+        menuOptions.style.display = menuOptions.style.display === "block" ? "none" : "block";
+      });
+
+      eliminar.addEventListener("click", function () {
+        nota.remove();
+        guardarNotas();
+      });
+
+      editar.addEventListener("click", function () {
+        textarea.removeAttribute("readonly");
+        textarea.style.background = "#f1e6ff"; 
+        guardarBtn.style.display = "block";
+        menuOptions.style.display = "none";
+      });
+
+      document.getElementById("notas-container").appendChild(nota);
+    }
+
+    function guardarNotas() {
+      const notas = [];
+      document.querySelectorAll(".nota").forEach((nota) => {
+        const texto = nota.querySelector("textarea").value;
+        notas.push({ texto });
+      });
+      localStorage.setItem("notas", JSON.stringify(notas));
+    }
+
+    document.getElementById("boton-nota").addEventListener("click", function () {
+      crearNota();
+    });
+
+    document.addEventListener("DOMContentLoaded", function () {
+      const notasGuardadas = JSON.parse(localStorage.getItem("notas")) || [];
+      notasGuardadas.forEach((nota) => {
+        crearNota(nota.texto);
+      });
+    });
+  </script>
+ 
+</body>
+</html>
